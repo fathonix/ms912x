@@ -183,7 +183,7 @@ static void ms912x_pipe_update(struct drm_simple_display_pipe *pipe,
 					&rect)) {
 			/* In case of error, merge the rects to update later */
 			ms912x_merge_rects(&ms912x->update_rect,
-					   &ms912x->update_rec	t, &rect);
+					   &ms912x->update_rect, &rect);
 		} else {
 			ms912x->update_rect = current_rect;
 		}
