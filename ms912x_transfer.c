@@ -102,7 +102,7 @@ static inline unsigned int ms912x_rgb_to_v(unsigned int r, unsigned int g,
 }
 
 static int ms912x_xrgb_to_yuv422_line(u8 *transfer_buffer,
-				      struct iosys_map *xrgb_buffer,
+				      struct dma_buf_map *xrgb_buffer,
 				      size_t offset, size_t width,
 				      u32 *temp_buffer)
 {
@@ -110,7 +110,7 @@ static int ms912x_xrgb_to_yuv422_line(u8 *transfer_buffer,
 	unsigned int pixel1, pixel2;
 	unsigned int r1, g1, b1, r2, g2, b2;
 	unsigned int v, y1, u, y2;
-	iosys_map_memcpy_from(temp_buffer, xrgb_buffer, offset, width * 4);
+	dma_buf_map_memcpy_from(temp_buffer, xrgb_buffer, offset, width * 4);
 	for (i = 0; i < width; i += 2) {
 		pixel1 = temp_buffer[i];
 		pixel2 = temp_buffer[i + 1];
@@ -143,13 +143,13 @@ static int ms912x_xrgb_to_yuv422_line(u8 *transfer_buffer,
 static const u8 ms912x_end_of_buffer[8] = { 0xff, 0xc0, 0x00, 0x00,
 					    0x00, 0x00, 0x00, 0x00 };
 
-static int ms912x_fb_xrgb8888_to_yuv422(void *dst, const struct iosys_map *src,
+static int ms912x_fb_xrgb8888_to_yuv422(void *dst, const struct dma_buf_map *src,
 					struct drm_framebuffer *fb,
 					struct drm_rect *rect)
 {
 	struct ms912x_frame_update_header *header =
 		(struct ms912x_frame_update_header *)dst;
-	struct iosys_map fb_map;
+	struct dma_buf_map fb_map;
 	int i, x, y1, y2, width;
 	void *temp_buffer;
 
@@ -169,10 +169,10 @@ static int ms912x_fb_xrgb8888_to_yuv422(void *dst, const struct iosys_map *src,
 	header->height = cpu_to_be16(drm_rect_height(rect));
 	dst += sizeof(*header);
 
-	fb_map = IOSYS_MAP_INIT_OFFSET(src, y1 * fb->pitches[0]);
+	fb_map = DMA_BUF_MAP_INIT_OFFSET(src, y1 * fb->pitches[0]);
 	for (i = y1; i < y2; i++) {
 		ms912x_xrgb_to_yuv422_line(dst, &fb_map, x * 4, width, temp_buffer);
-		iosys_map_incr(&fb_map, fb->pitches[0]);
+		dma_buf_map_incr(&fb_map, fb->pitches[0]);
 		dst += width * 2;
 	}
 
@@ -181,7 +181,7 @@ static int ms912x_fb_xrgb8888_to_yuv422(void *dst, const struct iosys_map *src,
 	return 0;
 }
 
-int ms912x_fb_send_rect(struct drm_framebuffer *fb, const struct iosys_map *map,
+int ms912x_fb_send_rect(struct drm_framebuffer *fb, const struct dma_buf_map *map,
 			struct drm_rect *rect)
 {
 	int ret = 0, idx;
