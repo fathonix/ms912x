@@ -203,7 +203,7 @@ int ms912x_fb_send_rect(struct drm_framebuffer *fb, const struct dma_buf_map *ma
 	struct ms912x_device *ms912x = to_ms912x(fb->dev);
 	struct drm_device *drm = &ms912x->drm;
 	struct ms912x_usb_request *prev_request, *current_request;
-	void *vaddr;
+	int vaddr;
 	int x, width;
 
 	/* Seems like hardware can only update framebuffer 
@@ -221,7 +221,7 @@ int ms912x_fb_send_rect(struct drm_framebuffer *fb, const struct dma_buf_map *ma
 
 	drm_dev_enter(drm, &idx);
 
-	vaddr = drm_gem_shmem_vmap(fb->obj[0]);
+	vaddr = drm_gem_shmem_object_vmap(fb->obj[0], map->vaddr);
 	if (!vaddr)
 		goto dev_exit;
 	
@@ -242,7 +242,7 @@ int ms912x_fb_send_rect(struct drm_framebuffer *fb, const struct dma_buf_map *ma
 			fb->obj[0]->import_attach->dmabuf, DMA_FROM_DEVICE);
 	
 vunmap:
-	drm_gem_shmem_vunmap(fb->obj[0], vaddr);
+	drm_gem_shmem_object_vunmap(fb->obj[0], map->vaddr);
 	if (ret)
 		goto dev_exit;
 
