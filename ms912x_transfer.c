@@ -7,6 +7,21 @@
 
 #include "ms912x.h"
 
+#define DMA_BUF_MAP_INIT_OFFSET(map_, offset_)	(struct dma_buf_map)	\
+	{								\
+		.vaddr = (map_)->vaddr + (offset_),			\
+		.is_iomem = (map_)->is_iomem,				\
+	}
+
+static inline void dma_buf_map_memcpy_from(void *dst, const struct dma_buf_map *src,
+					 size_t src_offset, size_t len)
+{
+	if (src->is_iomem)
+		memcpy_fromio(dst, src->vaddr_iomem + src_offset, len);
+	else
+		memcpy(dst, src->vaddr + src_offset, len);
+}
+
 static void ms912x_request_timeout(struct timer_list *t)
 {
 	struct ms912x_usb_request *request = from_timer(request, t, timer);
